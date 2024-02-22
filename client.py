@@ -1,5 +1,5 @@
 import socket
-import chat_lib  # To use chat_lib functions or consts, use chat_lib.****
+import chat_lib
 
 SERVER_IP = "127.0.0.1"  # Our server will run on same computer as client
 # SERVER_PORT = 5555
@@ -9,49 +9,51 @@ SERVER_PORT = 5678
 # HELPER SOCKET METHODS
 
 
-def build_send_recv_parse(conn, cmd, data):
+def build_send_recv_parse(conn: socket.socket, cmd: str, data: str):
     build_and_send_message(conn, cmd, data)
-    command, value = recv_message_and_parse(conn)
+    _, value = recv_message_and_parse(conn)
     return value
 
 
-def get_highscore(conn):
+def get_highscore(conn: socket.socket):
     return build_send_recv_parse(conn, "HIGHSCORE", "")
 
 
-def get_score(conn):
+def get_score(conn: socket.socket):
     return build_send_recv_parse(conn, "MY_SCORE", "")
 
 
-def play_question(conn):
-    question = chat_lib.split_data(build_send_recv_parse(conn, "GET_QUESTION", ""), 5)
-    if not question:
-        print("GameOver!")
-    else:
-        print(
-            f"{question[1]}?\n\t\t1.{question[2]}\n\t\t2.{question[3]}\n\t\t3.{question[4]}\n\t\t4.{question[5]}"
-        )
-        while True:
-            user_answer = input("What is the answer?\n")
-            if user_answer in ["1", "2", "3", "4"]:
-                break
-            else:
-                print("Wrong input!")
-        answer = build_send_recv_parse(
-            conn, "SEND_ANSWER", chat_lib.join_data([question[0], user_answer])
-        )
-        if not answer:
-            print("CORRECT ANSWER!!!")
+def play_question(conn: socket.socket):
+    to_quest = build_send_recv_parse(conn, "GET_QUESTION", "")
+    if to_quest is not None:
+        question = chat_lib.split_data(to_quest, 5)
+        if not question:
+            print("GameOver!")
         else:
-            print("Wrong answer")
-            print(answer)
+            print(
+                f"{question[1]}?\n\t\t1.{question[2]}\n\t\t2.{question[3]}\n\t\t3.{question[4]}\n\t\t4.{question[5]}"
+            )
+            while True:
+                user_answer = input("What is the answer?\n")
+                if user_answer in ["1", "2", "3", "4"]:
+                    break
+                else:
+                    print("Wrong input!")
+            answer = build_send_recv_parse(
+                conn, "SEND_ANSWER", chat_lib.join_data([question[0], user_answer])
+            )
+            if not answer:
+                print("CORRECT ANSWER!!!")
+            else:
+                print("Wrong answer")
+                print(answer)
 
 
-def get_logged_users(conn):
+def get_logged_users(conn: socket.socket):
     return build_send_recv_parse(conn, "LOGGED", "")
 
 
-def build_and_send_message(conn, code, data):
+def build_and_send_message(conn: socket.socket, code: str, data: str):
     """
     Builds a new message using chat_lib, wanted code and message.
     Prints debug info, then sends it to the given socket.
@@ -60,16 +62,18 @@ def build_and_send_message(conn, code, data):
     :param data: data (str)
     :return: Nothing
     """
-    conn.send(chat_lib.build_message(code, data).encode())
+    to_send = chat_lib.build_message(code, data)
+    if to_send is not None:
+        conn.send(to_send.encode())
 
 
-def recv_message_and_parse(conn):
+def recv_message_and_parse(conn: socket.socket):
     """
-    Recieves a new message from given socket,
+    Receives a new message from given socket,
     then parses the message using chat_lib.
     :param conn: conn (socket object)
     :return: cmd (str) and data (str) of the received message.
-    If error occured, will return None, None
+    If error occurred, will return None, None
     """
     full_msg = conn.recv(1024).decode()
     cmd, data = chat_lib.parse_message(full_msg)
@@ -83,12 +87,12 @@ def connect():
     return connection
 
 
-def error_and_exit(error_msg):
+def error_and_exit(error_msg: str):
     print(error_msg)
     exit()
 
 
-def login(conn):
+def login(conn: socket.socket):
     while True:
         username = input("Please enter username: \n")
         password = input("Please write password: \n")
@@ -98,16 +102,16 @@ def login(conn):
             chat_lib.join_data([username, password]),
         )
         sev_ans = recv_message_and_parse(conn)
-        if sev_ans == chat_lib.parse_message(
-            chat_lib.build_message(chat_lib.PROTOCOL_SERVER["login_ok_msg"], "")
-        ):
-            print("Logged in!")
-            return
-        else:
-            print(sev_ans[1])
+        answer = chat_lib.build_message(chat_lib.PROTOCOL_SERVER["login_ok_msg"], "")
+        if answer is not None:
+            if sev_ans == chat_lib.parse_message(answer):
+                print("Logged in!")
+                return
+            else:
+                print(sev_ans[1])
 
 
-def logout(conn):
+def logout(conn: socket.socket):
     build_and_send_message(conn, chat_lib.PROTOCOL_CLIENT["logout_msg"], "")
     conn.close()
     print("GoodBye!")
