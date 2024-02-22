@@ -12,7 +12,7 @@ import random
 messages_to_send = []
 users = {}
 questions = {}
-logged_users = {}  # a dictionary of client hostnames to usernames - will be used later
+logged_users = {}  # a dictionary of client host names to usernames - will be used later
 
 ERROR_MSG = "Error! "
 SERVER_PORT = 5678
@@ -23,7 +23,7 @@ SERVER_IP = "127.0.0.1"
 # HELPER SOCKET METHODS
 
 
-def build_and_send_message(conn, code, data):
+def build_and_send_message(conn: socket.socket, code: str, data: str):
     """
     Builds a new message using chat_lib, wanted code and message.
     Prints debug info, then sends it to the given socket.
@@ -105,7 +105,7 @@ def setup_socket():
     return server_socket
 
 
-def send_error(conn, error_msg):
+def send_error(conn: socket.socket, error_msg):
     """
     Send error message with given message
     Recieves: socket, message error string from called function
@@ -114,12 +114,12 @@ def send_error(conn, error_msg):
     build_and_send_message(conn, "ERROR", error_msg)
 
 
-def handle_getscore_message(conn, username):
+def handle_getscore_message(conn: socket.socket, username):
     global users
     build_and_send_message(conn, "SCORE", users[username]["score"])
 
 
-def handle_logout_message(conn):
+def handle_logout_message(conn: socket.socket):
     """
     Closes the given socket (in laster chapters, also remove user from logged_users dictioary)
     Recieves: socket
@@ -133,7 +133,7 @@ def handle_logout_message(conn):
     # Implement code ...
 
 
-def handle_logged_message(conn):
+def handle_logged_message(conn: socket.socket):
     """
     this will send to client the list of the logged users
     :param conn: socket
@@ -157,7 +157,7 @@ def create_random_question():
     )
 
 
-def handle_question_message(conn):
+def handle_question_message(conn: socket.socket):
     """
 
     :param conn:
@@ -168,7 +168,7 @@ def handle_question_message(conn):
     )
 
 
-def handle_answer_message(conn, username, answer):
+def handle_answer_message(conn: socket.socket, username, answer):
     """
 
     :param conn:
@@ -189,7 +189,7 @@ def handle_answer_message(conn, username, answer):
         )
 
 
-def handle_highscore_message(conn):
+def handle_highscore_message(conn: socket.socket):
     """
     this will send the highscore from high to low to the client
     :param conn: socket
@@ -204,7 +204,7 @@ def handle_highscore_message(conn):
     build_and_send_message(conn, "HIGHSCORE", highscores)
 
 
-def handle_login_message(conn, data):
+def handle_login_message(conn: socket.socket, data):
     """
     Gets socket and message data of login message. Checks  user and pass exists and match.
     If not - sends error and finished. If all ok, sends OK message and adds user and address to logged_users
@@ -224,7 +224,7 @@ def handle_login_message(conn, data):
         build_and_send_message(conn, "ERROR", "User doesn't found")
 
 
-def handle_client_message(conn, cmd, data):
+def handle_client_message(conn: socket.socket, cmd, data):
     """
     Gets message code and data and calls the right function to handle command
     Recieves: socket, message code and data
